@@ -238,7 +238,10 @@ def train():
     
     criterion = nn.L1Loss()
     optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
-    
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+        optimizer, mode="min", factor=0.5, patience=10, min_lr=1e-5
+    )
+
     history = {'train_loss': [], 'val_loss': []}
 
     print(f"Iniciando Treino com GRU no dispositivo: {DEVICE}")
@@ -251,6 +254,7 @@ def train():
             optimizer.zero_grad()
             loss = criterion(model(bx), by)
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             t_loss += loss.item()
 
@@ -266,9 +270,11 @@ def train():
 
         history['train_loss'].append(t_loss/len(train_loader))
         history['val_loss'].append(v_loss/len(val_loader))
-        
+        scheduler.step(history['val_loss'][-1])
+
         if (epoch + 1) % 10 == 0:
-            print(f"Epoch {epoch+1} | Val MAE: {history['val_loss'][-1]:.2f}")
+            lr_now = optimizer.param_groups[0]['lr']
+            print(f"Epoch {epoch+1} | Val MAE: {history['val_loss'][-1]:.2f} | LR: {lr_now:.2e}")
 
     y_val_pred = np.concatenate(preds_all)
     
