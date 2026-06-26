@@ -176,9 +176,11 @@ def train() -> None:
     mae  = float(mean_absolute_error(y_val_true, y_pred))
     rmse = float(np.sqrt(np.mean((y_val_true - y_pred) ** 2)))
     r2   = float(r2_score(y_val_true, y_pred))
+    mape = float(np.mean(np.abs((y_val_true - y_pred) / (y_val_true + 1e-8))) * 100)
     print(f"\n── GRU Results ──────────────────────────")
     print(f"MAE:  {mae:.4f} BPM")
     print(f"RMSE: {rmse:.4f} BPM")
+    print(f"MAPE: {mape:.4f} %")
     print(f"R²:   {r2:.4f}")
     print(f"Time: {elapsed:.0f}s")
 
