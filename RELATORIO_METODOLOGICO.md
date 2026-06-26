@@ -1,4 +1,4 @@
-# PulseFi — Estimação de Frequência Cardíaca via Channel State Information (CSI) com Redes Neurais Recorrentes
+# Wi-Cardio — Estimação de Frequência Cardíaca via Channel State Information (CSI) com Redes Neurais Recorrentes
 
 > **Relatório Metodológico Completo**  
 > Versão: 1.3 · Data: 2026-06-10  
@@ -26,7 +26,7 @@
 
 A estimação sem contato de sinais fisiológicos humanos utilizando sinais de radiofrequência tem emergido como uma área de pesquisa promissora. Em particular, o **Channel State Information (CSI)** — informação de estado de canal disponível em redes Wi-Fi IEEE 802.11 — possui sensibilidade suficiente para capturar micro-variações na reflexão de ondas eletromagnéticas causadas por movimentos corporais sutis como a expansão torácica durante a respiração e as pulsações cardíacas.
 
-O projeto **PulseFi** investiga a viabilidade de estimar a **frequência cardíaca (FC) em batimentos por minuto (BPM)** a partir de sinais CSI coletados com hardware de custo acessível (Raspberry Pi), utilizando modelos de aprendizado profundo baseados em redes neurais recorrentes (RNNs). O _ground truth_ é fornecido por smartwatch e dispositivo Polar, garantindo referências de alta qualidade para o treinamento supervisionado.
+O projeto **Wi-Cardio** investiga a viabilidade de estimar a **frequência cardíaca (FC) em batimentos por minuto (BPM)** a partir de sinais CSI coletados com hardware de custo acessível (Raspberry Pi), utilizando modelos de aprendizado profundo baseados em redes neurais recorrentes (RNNs). O _ground truth_ é fornecido por smartwatch e dispositivo Polar, garantindo referências de alta qualidade para o treinamento supervisionado.
 
 O problema é formulado como **regressão de séries temporais**: dada uma janela temporal de amplitudes CSI multi-subportadora, predizer o valor escalar de frequência cardíaca correspondente em BPM.
 
@@ -99,7 +99,7 @@ Os critérios de exclusão incluem: participantes sem nenhum dado de smartwatch,
 
 ## 3. Pré-processamento
 
-O pipeline de pré-processamento é implementado em [`src/preprocess-pulseFi.py`](src/preprocess-pulseFi.py) e opera sobre cada arquivo CSI individualmente antes da concatenação global.
+O pipeline de pré-processamento é implementado em [`src/preprocess.py`](src/preprocess.py) e opera sobre cada arquivo CSI individualmente antes da concatenação global.
 
 ### 3.1 Carregamento e Conversão para Amplitude
 
@@ -169,7 +169,7 @@ Dois modelos foram implementados e comparados, com arquiteturas intencionalmente
 
 ### 4.1 Modelo LSTM (Baseline)
 
-Arquivo: [`src/train_lstm.py`](src/train_lstm.py) · Classe: `PulseFiLSTM`
+Arquivo: [`src/train_lstm.py`](src/train_lstm.py) · Classe: `LSTM`
 
 Arquitetura deliberadamente simples para servir como _baseline_ comparativo:
 
@@ -200,7 +200,7 @@ O contexto temporal é extraído pelo **último timestep** da sequência (`out[:
 
 ### 4.2 Modelo GRU com Projeção de Entrada e Atenção
 
-Arquivo: [`src/train_gru.py`](src/train_gru.py) · Classe: `PulseFiModelGRU`
+Arquivo: [`src/train_gru.py`](src/train_gru.py) · Classe: `ModelGRU`
 
 Arquitetura aprimorada com três componentes adicionais em relação ao LSTM baseline:
 
@@ -440,7 +440,7 @@ Gera 20 figuras:
 ```
 frequencia_csi/
 ├── src/
-│   ├── preprocess-pulseFi.py        # Pipeline de pré-processamento
+│   ├── preprocess.py        # Pipeline de pré-processamento
 │   ├── train_gru.py                  # Treino do GRU (modelo principal)
 │   ├── train_lstm.py                 # Treino do LSTM (baseline)
 │   ├── lstm_certo.py                 # Variante LSTM
@@ -497,7 +497,7 @@ matplotlib
 
 ```bash
 # 1. Pré-processamento
-python src/preprocess-pulseFi.py \
+python src/preprocess.py \
     --dataset_path Data_DS2_raspberry_npz/ \
     --gt_dir       Data_DS2_smartwatch-main/Data_Heart/ \
     --out_dir      saida_full/ \

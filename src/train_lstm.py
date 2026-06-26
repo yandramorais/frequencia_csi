@@ -68,7 +68,7 @@ def load_data() -> tuple[DataLoader, DataLoader, np.ndarray]:
     return train_loader, val_loader, y_val
 
 
-class PulseFiLSTM(nn.Module):
+class LSTM(nn.Module):
     def __init__(self, input_dim: int, hidden: int = HIDDEN, layers: int = LAYERS) -> None:
         super().__init__()
         self.lstm = nn.LSTM(
@@ -94,7 +94,7 @@ def train() -> None:
     train_loader, val_loader, y_val_true = load_data()
     input_dim = next(iter(train_loader))[0].shape[2]
 
-    model = PulseFiLSTM(input_dim).to(DEVICE)
+    model = LSTM(input_dim).to(DEVICE)
     n_params = sum(p.numel() for p in model.parameters())
     print(f"Device: {DEVICE} | Parameters: {n_params:,}")
 

@@ -1,8 +1,4 @@
-"""
-Gera os dois gráficos de resultados para o artigo:
-  1. MAE por posição corporal — barras agrupadas GRU vs LSTM
-  2. FC média por posição — Smartwatch vs GRU (+ variante de participante único por tempo)
-"""
+
 import json
 from pathlib import Path
 
@@ -14,7 +10,6 @@ import matplotlib.ticker as ticker
 from torch.utils.data import DataLoader, TensorDataset
 
 
-# ── Device ────────────────────────────────────────────────────────────────────
 def get_device():
     if torch.backends.mps.is_available():
         return torch.device("mps")
@@ -29,8 +24,7 @@ OUT_DIR.mkdir(exist_ok=True)
 BATCH     = 64
 
 
-# ── Architectures ─────────────────────────────────────────────────────────────
-class PulseFiGRU(nn.Module):
+class GRU(nn.Module):
     def __init__(self, input_dim, hidden=256, layers=2):
         super().__init__()
         self.input_proj = nn.Sequential(
@@ -52,7 +46,7 @@ class PulseFiGRU(nn.Module):
         return self.regressor((out * w).sum(1)).squeeze(-1)
 
 
-class PulseFiLSTM(nn.Module):
+class LSTM(nn.Module):
     def __init__(self, input_dim, hidden=256, layers=2):
         super().__init__()
         self.lstm = nn.LSTM(input_dim, hidden, layers, batch_first=True,
@@ -66,7 +60,6 @@ class PulseFiLSTM(nn.Module):
         return self.regressor(out[:, -1, :]).squeeze(-1)
 
 
-# ── Data helpers ──────────────────────────────────────────────────────────────
 def load_val():
     X   = np.load(INPUT_DIR / "X_val.npz")["X"].astype(np.float32)
     y   = np.load(INPUT_DIR / "y_val.npy").astype(np.float32)
@@ -92,7 +85,6 @@ def load_model(cls, ckpt, input_dim):
     return m
 
 
-# ── Style helpers ─────────────────────────────────────────────────────────────
 def clean_ax(ax):
     ax.set_facecolor("white")
     ax.spines[["top", "right"]].set_visible(False)
@@ -101,7 +93,6 @@ def clean_ax(ax):
     ax.tick_params(colors="#444444")
 
 
-# ── Chart 1: MAE per position — grouped bars GRU vs LSTM ─────────────────────
 def chart_mae_per_position(y_true, pos, y_gru, y_lstm):
     pos_ids  = np.sort(np.unique(pos))
     mae_gru  = [np.mean(np.abs(y_true[pos == p] - y_gru[pos == p]))  for p in pos_ids]
@@ -119,15 +110,11 @@ def chart_mae_per_position(y_true, pos, y_gru, y_lstm):
     bars_g = ax.bar(x - w/2, mae_gru,  w, color=C_GRU,  label="Wi-Cardio", zorder=3)
     bars_l = ax.bar(x + w/2, mae_lstm, w, color=C_LSTM, label="LSTM",      zorder=3)
 
-    # dashed mean lines with label in legend
     mean_gru  = float(np.mean(mae_gru))
     mean_lstm = float(np.mean(mae_lstm))
-    ax.axhline(mean_gru,  color=C_GRU,  lw=1.4, ls="--", alpha=0.8,
-               label=f"Wi-Cardio overall = {mean_gru:.2f} bpm")
-    ax.axhline(mean_lstm, color=C_LSTM, lw=1.4, ls="--", alpha=0.8,
-               label=f"LSTM      overall = {mean_lstm:.2f} bpm")
+    ax.axhline(mean_gru,  color=C_GRU,  lw=1.4, ls="--", alpha=0.8, label="Wi-Cardio")
+    ax.axhline(mean_lstm, color=C_LSTM, lw=1.4, ls="--", alpha=0.8, label="LSTM")
 
-    # value labels — 2 decimal places, rotated 60° to avoid overlap
     top = max(max(mae_gru), max(mae_lstm))
     for bar in bars_g:
         h = bar.get_height()
@@ -140,13 +127,19 @@ def chart_mae_per_position(y_true, pos, y_gru, y_lstm):
                 f"{h:.2f}", ha="left", va="bottom",
                 fontsize=8, color=C_LSTM, rotation=60, rotation_mode="anchor")
 
+    x_annot = len(pos_ids) - 0.55
+    ax.text(x_annot, mean_gru  + top * 0.02, f"mean MAE = {mean_gru:.2f} bpm",
+            color=C_GRU,  fontsize=10, ha="right", va="bottom")
+    ax.text(x_annot, mean_lstm + top * 0.02, f"mean MAE = {mean_lstm:.2f} bpm",
+            color=C_LSTM, fontsize=10, ha="right", va="bottom")
+
     ax.set_xticks(x)
     ax.set_xticklabels([str(p) for p in pos_ids], fontsize=12)
     ax.set_xlabel("Body Position", fontsize=13, labelpad=10)
     ax.set_ylabel("MAE (bpm)", fontsize=13)
     ax.tick_params(axis="y", labelsize=12)
     ax.legend(frameon=True, fontsize=11, framealpha=0.9, edgecolor="#cccccc")
-    ax.set_ylim(0, top * 1.35)
+    ax.set_ylim(0, top * 1.20)
 
     fig.subplots_adjust(left=0.08, right=0.98, top=0.95, bottom=0.14)
     out = OUT_DIR / "mae_per_position_gru_lstm.png"
@@ -156,11 +149,10 @@ def chart_mae_per_position(y_true, pos, y_gru, y_lstm):
     plt.show()
 
 
-# ── Chart 2a: Mean HR per position — dots Smartwatch vs GRU ──────────────────
 def chart_hr_per_position(y_true, pos, y_gru):
     C_GT_EDGE  = "#6B0000"
-    C_GT_FACE  = "#D4919B"   # light pink
-    C_GRU_FACE = "#6B0000"   # dark red
+    C_GT_FACE  = "#D4919B"
+    C_GRU_FACE = "#6B0000"
 
     pos_ids = np.sort(np.unique(pos))
     hr_gt  = np.array([np.mean(y_true[pos == p]) for p in pos_ids])
@@ -177,13 +169,11 @@ def chart_hr_per_position(y_true, pos, y_gru):
     ax.scatter(pos_ids, hr_gru, s=200, color=C_GRU_FACE, edgecolors=C_GT_EDGE,
                linewidths=1.4, zorder=4, label="Wi-Cardio (Predicted)")
 
-    # all integer x ticks
     ax.set_xticks(pos_ids)
     ax.set_xticklabels([str(p) for p in pos_ids], fontsize=18)
     ax.set_xlabel("Body Position", fontsize=19, labelpad=10)
     ax.set_ylabel("Mean HR (bpm)", fontsize=19)
 
-    # integer y-axis ticks
     all_vals = np.concatenate([hr_gt, hr_gru])
     y_lo = int(all_vals.min()) - 3
     y_hi = int(all_vals.max()) + 3
@@ -200,13 +190,11 @@ def chart_hr_per_position(y_true, pos, y_gru):
     plt.show()
 
 
-# ── Chart 2b: Single participant HR over time — dots Smartwatch vs GRU ────────
 def chart_hr_time_single(y_true, pos, sub, y_gru):
     C_GT_EDGE  = "#6B0000"
     C_GT_FACE  = "#D4919B"
     C_GRU_FACE = "#6B0000"
 
-    # best subject+position = lowest MAE with at least 15 windows
     best_sub, best_pos_id, best_mae = None, None, np.inf
     for p in np.sort(np.unique(pos)):
         for s_id in np.unique(sub[pos == p]):
@@ -230,7 +218,6 @@ def chart_hr_time_single(y_true, pos, sub, y_gru):
     ax.grid(axis="y", color="#e8e8e8", linewidth=0.7, zorder=0)
     ax.grid(axis="x", visible=False)
 
-    # remap time to 0–50 s (5 equal segments of 10 s)
     t_display = np.linspace(0, 50, len(t))
 
     ax.scatter(t_display, gt,  s=200, alpha=0.80, color=C_GT_FACE,  edgecolors=C_GT_EDGE,
@@ -241,7 +228,6 @@ def chart_hr_time_single(y_true, pos, sub, y_gru):
     ax.set_xlabel("Time (s)", fontsize=21, labelpad=12)
     ax.set_ylabel("Mean HR (bpm)", fontsize=21)
 
-    # y ticks — mesma estrutura do gráfico 2
     all_v = np.concatenate([gt, gru])
     y_lo = int(all_v.min()) - 3
     y_hi = int(all_v.max()) + 3
@@ -250,7 +236,6 @@ def chart_hr_time_single(y_true, pos, sub, y_gru):
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v)}"))
     ax.tick_params(axis="y", labelsize=20)
 
-    # x-axis: ticks a cada 5 s, espaço antes do 0 e após o 50
     ax.set_xlim(-2, 52)
     ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v)}"))
@@ -265,7 +250,6 @@ def chart_hr_time_single(y_true, pos, sub, y_gru):
     plt.show()
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
 if __name__ == "__main__":
     dl, y_true, pos, sub = load_val()
     input_dim = int(np.load(INPUT_DIR / "X_val.npz")["X"].shape[2])
@@ -278,9 +262,9 @@ if __name__ == "__main__":
         raise SystemExit
 
     print("Rodando inferência GRU...")
-    y_gru  = infer(load_model(PulseFiGRU,  gru_ckpt,  input_dim), dl)
+    y_gru  = infer(load_model(GRU,  gru_ckpt,  input_dim), dl)
     print("Rodando inferência LSTM...")
-    y_lstm = infer(load_model(PulseFiLSTM, lstm_ckpt, input_dim), dl)
+    y_lstm = infer(load_model(LSTM, lstm_ckpt, input_dim), dl)
 
     print("\n[1/3] MAE por posição (GRU vs LSTM)...")
     chart_mae_per_position(y_true, pos, y_gru, y_lstm)

@@ -12,9 +12,8 @@ SUBCARRIER  = 149
 N_SUB_MEAN  = 10
 BANDPASS    = (0.8, 2.17)
 TRIM_S      = 10
-DISPLAY_S   = 20          # limita exibição a 20 s (igual ao janelamento)
+DISPLAY_S   = 20
 
-# ── Carregamento ──────────────────────────────────────────────────────────────
 z = np.load(NPZ_FILE, allow_pickle=True)
 csi_raw = z["csi"]
 ts_raw  = z["ts"] if "ts" in z.files else None
@@ -29,7 +28,6 @@ else:
     fs = 500 / 60.0
     ts = np.arange(X.shape[0]) / fs
 
-# ── Pipeline completo ─────────────────────────────────────────────────────────
 X_proc = X - np.mean(X, axis=0)
 
 b, a = butter(3, BANDPASS, btype="band", fs=fs)
@@ -43,7 +41,6 @@ ts_proc = ts[cut:] - ts[cut]
 ts_raw_trim = ts[cut:] - ts[cut]
 X_raw_trim  = X[cut:]
 
-# ── Sinal de uma única subportadora ──────────────────────────────────────────
 sub_idx = min(SUBCARRIER, X_raw_trim.shape[1] - 1)
 
 def norm(s):
@@ -52,7 +49,6 @@ def norm(s):
 sig_before_n = norm(X_raw_trim[:, sub_idx])
 sig_after_n  = norm(X_proc[:,    sub_idx])
 
-# ── Figura ────────────────────────────────────────────────────────────────────
 import matplotlib.ticker as ticker
 
 fig, axes = plt.subplots(2, 1, figsize=(13, 6), sharex=True)
