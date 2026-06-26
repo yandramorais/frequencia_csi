@@ -6,12 +6,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import butter, filtfilt, savgol_filter
 
-NPZ_FILE   = "Data_DS2_raspberry_npz/001/01_2023_10_30_-_12_20_05_bw_80_ch_36.npz"
-OUT_FILE   = "charts_output/preprocessing_before_after.png"
-SUBCARRIER = 128
-N_SUB_MEAN = 10
-BANDPASS   = (0.8, 2.17)
-TRIM_S     = 10
+NPZ_FILE    = "Data_DS2_raspberry_npz/001/01_2023_10_30_-_12_20_05_bw_80_ch_36.npz"
+OUT_FILE    = "charts_output/preprocessing_before_after.png"
+SUBCARRIER  = 149
+N_SUB_MEAN  = 10
+BANDPASS    = (0.8, 2.17)
+TRIM_S      = 10
+DISPLAY_S   = 20          # limita exibição a 20 s (igual ao janelamento)
 
 # ── Carregamento ──────────────────────────────────────────────────────────────
 z = np.load(NPZ_FILE, allow_pickle=True)
@@ -42,28 +43,27 @@ ts_proc = ts[cut:] - ts[cut]
 ts_raw_trim = ts[cut:] - ts[cut]
 X_raw_trim  = X[cut:]
 
-# ── Sinal de referência: média das subportadoras centrais ─────────────────────
-lo = max(0, SUBCARRIER - N_SUB_MEAN // 2)
-hi = min(X.shape[1], SUBCARRIER + N_SUB_MEAN // 2)
+# ── Sinal de uma única subportadora ──────────────────────────────────────────
+sub_idx = min(SUBCARRIER, X_raw_trim.shape[1] - 1)
 
-sig_before = X_raw_trim[:, lo:hi].mean(axis=1)
-sig_after  = X_proc[:, lo:hi].mean(axis=1)
-
-# Z-score para colocar na mesma escala visual
 def norm(s):
     return (s - s.mean()) / (s.std() + 1e-8)
 
-sig_before_n = norm(sig_before)
-sig_after_n  = norm(sig_after)
+sig_before_n = norm(X_raw_trim[:, sub_idx])
+sig_after_n  = norm(X_proc[:,    sub_idx])
 
 # ── Figura ────────────────────────────────────────────────────────────────────
-fig, axes = plt.subplots(2, 1, figsize=(13, 5), sharex=True)
+import matplotlib.ticker as ticker
+
+fig, axes = plt.subplots(2, 1, figsize=(13, 6), sharex=True)
 fig.patch.set_facecolor("white")
-fig.subplots_adjust(hspace=0.35, left=0.06, right=0.98, top=0.88, bottom=0.12)
+fig.subplots_adjust(hspace=0.45, left=0.08, right=0.98, top=0.97, bottom=0.13)
 
 pairs = [
-    (ts_raw_trim, sig_before_n, "#1f77b4", "Raw signal  (CSI amplitude, normalized)"),
-    (ts_proc,     sig_after_n,  "#d62728", "Preprocessed signal  (DC removal + bandpass + Savitzky-Golay, normalized)"),
+    (ts_raw_trim, sig_before_n, "#1f77b4",
+     f"Raw signal"),
+    (ts_proc,     sig_after_n,  "#d62728",
+     f"Preprocessed signal"),
 ]
 
 for ax, (t, s, color, label) in zip(axes, pairs):
@@ -72,14 +72,16 @@ for ax, (t, s, color, label) in zip(axes, pairs):
     ax.grid(True, color="#e0e0e0", linewidth=0.6)
     ax.spines[["top", "right"]].set_visible(False)
     ax.spines[["left", "bottom"]].set_color("#cccccc")
-    ax.legend(loc="upper right", fontsize=9, frameon=False)
-    ax.set_ylabel("Amplitude (a.u.)", fontsize=9)
-    ax.tick_params(labelsize=8.5, colors="#444444")
-    ax.set_xlim(t[0], t[-1])
+    ax.legend(loc="upper right", fontsize=20, frameon=False)
+    ax.set_ylabel("Amplitude (a.u.)", fontsize=21)
+    ax.tick_params(labelsize=19, colors="#444444")
+    ax.set_xlim(0, DISPLAY_S)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(2))
+    ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v)}"))
 
-axes[1].set_xlabel("Time (s)", fontsize=9.5)
+axes[1].set_xlabel("Time (s)", fontsize=21)
 
 Path("charts_output").mkdir(exist_ok=True)
-plt.savefig(OUT_FILE, dpi=180, bbox_inches="tight", facecolor="white")
+plt.savefig(OUT_FILE, dpi=300, bbox_inches="tight", facecolor="white")
 print(f"Salvo: {OUT_FILE}")
 plt.show()

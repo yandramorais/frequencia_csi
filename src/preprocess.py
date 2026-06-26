@@ -1,12 +1,3 @@
-"""
-preprocess.py — CSI preprocessing pipeline for heart rate estimation.
-
-Usage:
-    python src/preprocess.py \
-        --dataset_path Data_DS2_raspberry_npz/ \
-        --gt_dir       Data_DS2_smartwatch-main/Data_Heart/ \
-        --out_dir      saida_full/
-"""
 from __future__ import annotations
 
 import argparse
@@ -21,19 +12,17 @@ import numpy as np
 import pandas as pd
 from scipy.signal import butter, filtfilt, savgol_filter
 
-# ── Logging ───────────────────────────────────────────────────────────────────
 logging.basicConfig(level=logging.INFO, format="%(asctime)s | %(levelname)s | %(message)s")
 log = logging.getLogger("preprocess")
 
-# ── Constants ─────────────────────────────────────────────────────────────────
-DEFAULT_FS   = 500 / 60.0      # fallback sample rate (~8.33 Hz)
-BANDPASS_LOW = 0.8             # Hz — lower cardiac band limit
-BANDPASS_HIGH = 2.17           # Hz — upper cardiac band limit (~130 BPM)
+DEFAULT_FS   = 500 / 60.0
+BANDPASS_LOW = 0.8
+BANDPASS_HIGH = 2.17
 FILTER_ORDER  = 3
 SAVGOL_WINDOW = 15
 SAVGOL_POLY   = 3
-TRIM_S        = 10             # seconds to discard at recording start
-TARGET_WINDOW = int(20 * DEFAULT_FS)  # canonical window length (166 samples)
+TRIM_S        = 10
+TARGET_WINDOW = int(20 * DEFAULT_FS)
 
 TEST_SIZE    = 0.15
 VAL_SIZE     = 0.15
@@ -44,8 +33,6 @@ INVALID_SUBJECTS: frozenset[int] = frozenset({
     67, 68, 69, 70, 71, 81, 90, 98, 106, 203,
 })
 
-
-# ── Signal processing ─────────────────────────────────────────────────────────
 
 def csi_to_amplitude(x: np.ndarray) -> np.ndarray:
     return np.abs(x).astype(np.float32) if np.iscomplexobj(x) else x.astype(np.float32)
@@ -79,8 +66,6 @@ def preprocess_signal(x: np.ndarray, fs: float) -> np.ndarray:
     x = savgol_smooth(x)
     return x
 
-
-# ── I/O helpers ───────────────────────────────────────────────────────────────
 
 def infer_fs(ts: Optional[np.ndarray]) -> Optional[float]:
     if ts is None:
@@ -164,8 +149,6 @@ def extract_subject_from_gt(gt_path: Path) -> int:
     return int(gt_path.parent.name)
 
 
-# ── Windowing ─────────────────────────────────────────────────────────────────
-
 def _is_in_fault(t: float, intervals: list[tuple[float, float]]) -> bool:
     return any(s <= t <= e for s, e in intervals)
 
@@ -241,8 +224,6 @@ def sliding_window_with_gt(
     return np.stack(X_out, dtype=np.float32), np.array(y_out, dtype=np.float32), diag
 
 
-# ── Dataset builder ───────────────────────────────────────────────────────────
-
 def build_windows(
     dataset_path: Path,
     gt_dir: Path,
@@ -304,7 +285,6 @@ def build_windows(
             log.warning(f"NO WINDOWS | {fp.name} | {diag}")
             continue
 
-        # Normalise to canonical window length
         if Xw.shape[1] != TARGET_WINDOW:
             log.warning(f"Window shape mismatch {Xw.shape[1]} → {TARGET_WINDOW} | {fp.name}")
             Xw = Xw[:, :TARGET_WINDOW, :]
@@ -328,8 +308,6 @@ def build_windows(
         np.concatenate(all_s, dtype=np.int32),
     )
 
-
-# ── Subject-wise split and save ───────────────────────────────────────────────
 
 def split_and_save(
     X: np.ndarray,
@@ -368,8 +346,6 @@ def split_and_save(
     _save("val",   val_subjs)
     _save("test",  test_subjs)
 
-
-# ── Entry point ───────────────────────────────────────────────────────────────
 
 def main() -> None:
     ap = argparse.ArgumentParser(description="CSI preprocessing pipeline")

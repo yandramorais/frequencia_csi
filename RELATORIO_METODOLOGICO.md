@@ -26,7 +26,7 @@
 
 A estimação sem contato de sinais fisiológicos humanos utilizando sinais de radiofrequência tem emergido como uma área de pesquisa promissora. Em particular, o **Channel State Information (CSI)** — informação de estado de canal disponível em redes Wi-Fi IEEE 802.11 — possui sensibilidade suficiente para capturar micro-variações na reflexão de ondas eletromagnéticas causadas por movimentos corporais sutis como a expansão torácica durante a respiração e as pulsações cardíacas.
 
-O projeto **PulseFi** investiga a viabilidade de estimar a **frequência cardíaca (FC) em batimentos por minuto (BPM)** a partir de sinais CSI coletados com hardware de custo acessível (Raspberry Pi), utilizando modelos de aprendizado profundo baseados em redes neurais recorrentes (RNNs). O *ground truth* é fornecido por smartwatch e dispositivo Polar, garantindo referências de alta qualidade para o treinamento supervisionado.
+O projeto **PulseFi** investiga a viabilidade de estimar a **frequência cardíaca (FC) em batimentos por minuto (BPM)** a partir de sinais CSI coletados com hardware de custo acessível (Raspberry Pi), utilizando modelos de aprendizado profundo baseados em redes neurais recorrentes (RNNs). O _ground truth_ é fornecido por smartwatch e dispositivo Polar, garantindo referências de alta qualidade para o treinamento supervisionado.
 
 O problema é formulado como **regressão de séries temporais**: dada uma janela temporal de amplitudes CSI multi-subportadora, predizer o valor escalar de frequência cardíaca correspondente em BPM.
 
@@ -38,33 +38,33 @@ O problema é formulado como **regressão de séries temporais**: dada uma janel
 
 O dataset é multimodal e composto por três fontes sincronizadas coletadas simultaneamente para cada participante em cada posição experimental:
 
-| Fonte | Formato | Conteúdo |
-|---|---|---|
-| **CSI (Raspberry Pi)** | `.npz` (NumPy comprimido) | Matriz complexa `(N_frames, 256)` + vetor de timestamps UNIX |
-| **Ground Truth Smartwatch** | `.json` | Série temporal de FC em BPM com timestamps absolutos |
-| **Ground Truth Polar** | `.csv` | Série temporal de FC em BPM com timestamps absolutos |
+| Fonte                       | Formato                   | Conteúdo                                                     |
+| --------------------------- | ------------------------- | ------------------------------------------------------------ |
+| **CSI (Raspberry Pi)**      | `.npz` (NumPy comprimido) | Matriz complexa `(N_frames, 256)` + vetor de timestamps UNIX |
+| **Ground Truth Smartwatch** | `.json`                   | Série temporal de FC em BPM com timestamps absolutos         |
+| **Ground Truth Polar**      | `.csv`                    | Série temporal de FC em BPM com timestamps absolutos         |
 
 ### 2.2 Estatísticas do Dataset
 
-| Parâmetro | Valor |
-|---|---|
-| Participantes detectados (união) | 107 |
-| Participantes com dados CSI completos | 106 |
-| Participantes com GT completo (Polar + Smartwatch) | 85 |
-| Posições experimentais por participante | 18 (posições 01–18) |
-| Combinações participante-posição completas | 1.534 / 1.819 |
-| Arquivos CSI (`.npz`) | 1.918 |
-| Arquivos Polar (`.csv`) | 1.673 |
-| Arquivos Smartwatch (`.json`) | 1.818 |
+| Parâmetro                                          | Valor               |
+| -------------------------------------------------- | ------------------- |
+| Participantes detectados (união)                   | 107                 |
+| Participantes com dados CSI completos              | 106                 |
+| Participantes com GT completo (Polar + Smartwatch) | 85                  |
+| Posições experimentais por participante            | 18 (posições 01–18) |
+| Combinações participante-posição completas         | 1.534 / 1.819       |
+| Arquivos CSI (`.npz`)                              | 1.918               |
+| Arquivos Polar (`.csv`)                            | 1.673               |
+| Arquivos Smartwatch (`.json`)                      | 1.818               |
 
 ### 2.3 Estatísticas dos Tensores Pré-processados
 
-| Conjunto | Amostras (janelas) | FC — mín/máx/média |
-|---|---|---|
-| Treino | 63.723 | — |
-| Validação | 13.655 | 49 / 158 / 91,3 BPM |
-| Teste | 13.656 | — |
-| **Total** | **91.034** | **49 – 158 BPM** |
+| Conjunto  | Amostras (janelas) | FC — mín/máx/média  |
+| --------- | ------------------ | ------------------- |
+| Treino    | 63.723             | —                   |
+| Validação | 13.655             | 49 / 158 / 91,3 BPM |
+| Teste     | 13.656             | —                   |
+| **Total** | **91.034**         | **49 – 158 BPM**    |
 
 O conjunto de validação contém amostras de **87 participantes** distribuídos pelas **18 posições** experimentais.
 
@@ -115,7 +115,7 @@ Após a extração de amplitude, remove-se a componente DC (média temporal de c
 
 $$\hat{A}_{t,k} = A_{t,k} - \frac{1}{N}\sum_{t=1}^{N} A_{t,k}$$
 
-Esta operação elimina o *offset* estático causado por reflexões fixas do ambiente (paredes, mobiliário), isolando apenas as flutuações dinâmicas associadas ao movimento humano.
+Esta operação elimina o _offset_ estático causado por reflexões fixas do ambiente (paredes, mobiliário), isolando apenas as flutuações dinâmicas associadas ao movimento humano.
 
 ### 3.3 Filtragem Passa-Banda
 
@@ -123,7 +123,7 @@ Aplica-se um filtro **Butterworth de ordem 3** na banda fisiologicamente relevan
 
 $$f_{\text{low}} = 0{,}8\ \text{Hz} \qquad f_{\text{high}} = 2{,}17\ \text{Hz}$$
 
-Esta banda corresponde a frequências cardíacas de **48 a 130 BPM**, cobrindo o espectro típico de repouso até esforço moderado. A função `filtfilt` aplica o filtro em ambas as direções temporais (*zero-phase filtering*), eliminando o atraso de fase introduzido pela filtragem causal.
+Esta banda corresponde a frequências cardíacas de **48 a 130 BPM**, cobrindo o espectro típico de repouso até esforço moderado. A função `filtfilt` aplica o filtro em ambas as direções temporais (_zero-phase filtering_), eliminando o atraso de fase introduzido pela filtragem causal.
 
 ### 3.4 Suavização por Savitzky-Golay
 
@@ -135,15 +135,15 @@ Os primeiros **10 segundos** de cada gravação são descartados para eliminar o
 
 ### 3.6 Carregamento do Ground Truth
 
-O *ground truth* é carregado exclusivamente do **smartwatch** (arquivo `.json`), suportando múltiplos formatos de exportação. O pareamento com o arquivo CSI é feito por correspondência de nome de arquivo.
+O _ground truth_ é carregado exclusivamente do **smartwatch** (arquivo `.json`), suportando múltiplos formatos de exportação. O pareamento com o arquivo CSI é feito por correspondência de nome de arquivo.
 
 ### 3.7 Janelamento Deslizante com Associação ao GT
 
-| Parâmetro | Valor | Justificativa |
-|---|---|---|
-| `window_sec` | 20 segundos | Captura múltiplos ciclos cardíacos (mínimo ~16 batidas @ 48 BPM) |
-| `step_sec` | 0,5 segundos | Gera alta densidade de amostras com sobreposição de 97,5% |
-| Dimensão padronizada | `T = 166` amostras | `int(20 × 500/60)` |
+| Parâmetro            | Valor              | Justificativa                                                    |
+| -------------------- | ------------------ | ---------------------------------------------------------------- |
+| `window_sec`         | 20 segundos        | Captura múltiplos ciclos cardíacos (mínimo ~16 batidas @ 48 BPM) |
+| `step_sec`           | 0,5 segundos       | Gera alta densidade de amostras com sobreposição de 97,5%        |
+| Dimensão padronizada | `T = 166` amostras | `int(20 × 500/60)`                                               |
 
 Cada janela é normalizada independentemente por Z-score com $\varepsilon = 10^{-8}$.
 
@@ -153,13 +153,13 @@ Três filtros são aplicados: (1) exclusão de intervalos marcados como defeituo
 
 ### 3.9 Divisão por Sujeito (Subject-Wise Split)
 
-A divisão é feita **por sujeito** (não por amostra), garantindo que nenhum participante apareça em mais de um conjunto e prevenindo *data leakage*.
+A divisão é feita **por sujeito** (não por amostra), garantindo que nenhum participante apareça em mais de um conjunto e prevenindo _data leakage_.
 
-| Conjunto | Proporção | Sujeitos (aprox.) | Papel |
-|---|---|---|---|
-| Treino | ~70% | ~59 | Otimização dos parâmetros |
-| Validação | ~15% | ~13 | Early stopping e seleção de modelo |
-| Teste | ~15% | ~13 | Avaliação final sem viés |
+| Conjunto  | Proporção | Sujeitos (aprox.) | Papel                              |
+| --------- | --------- | ----------------- | ---------------------------------- |
+| Treino    | ~70%      | ~59               | Otimização dos parâmetros          |
+| Validação | ~15%      | ~13               | Early stopping e seleção de modelo |
+| Teste     | ~15%      | ~13               | Avaliação final sem viés           |
 
 ---
 
@@ -171,7 +171,7 @@ Dois modelos foram implementados e comparados, com arquiteturas intencionalmente
 
 Arquivo: [`src/train_lstm.py`](src/train_lstm.py) · Classe: `PulseFiLSTM`
 
-Arquitetura deliberadamente simples para servir como *baseline* comparativo:
+Arquitetura deliberadamente simples para servir como _baseline_ comparativo:
 
 ```
 Entrada: (B, T, 256)   B=batch, T=166 timesteps, 256 subportadoras
@@ -248,15 +248,15 @@ Saída: (B,)   FC em BPM
 
 ### 4.3 Comparação Estrutural
 
-| Componente | LSTM (Baseline) | GRU |
-|---|---|---|
-| Célula recorrente | LSTM (4 gates) | GRU (3 gates) |
-| Projeção de entrada | Não | Sim (Linear→LN→GELU) |
-| LayerNorm pós-RNN | Não | Sim |
-| Extração de contexto | Último timestep | Atenção softmax |
-| LayerNorm no regressor | Não | Sim |
-| Total de parâmetros | 2.695.425 | 2.106.114 |
-| Otimizador | AdamW (wd=1e-5) | Adam |
+| Componente             | LSTM (Baseline) | GRU                  |
+| ---------------------- | --------------- | -------------------- |
+| Célula recorrente      | LSTM (4 gates)  | GRU (3 gates)        |
+| Projeção de entrada    | Não             | Sim (Linear→LN→GELU) |
+| LayerNorm pós-RNN      | Não             | Sim                  |
+| Extração de contexto   | Último timestep | Atenção softmax      |
+| LayerNorm no regressor | Não             | Sim                  |
+| Total de parâmetros    | 2.695.425       | 2.106.114            |
+| Otimizador             | AdamW (wd=1e-5) | Adam                 |
 
 **Atenção temporal:** Para cada timestep $t$, o peso é:
 
@@ -268,26 +268,28 @@ Isso permite ao modelo aprender quais regiões temporais da janela de 20 s são 
 
 ## 5. Procedimento de Treinamento
 
-| Hiperparâmetro | LSTM | GRU |
-|---|---|---|
-| `BATCH_SIZE` | 64 | 64 |
-| `EPOCHS` (máximo) | 250 | 250 |
-| `LEARNING_RATE` | 5 × 10⁻⁴ | 5 × 10⁻⁴ |
-| `HIDDEN_SIZE` | 256 | 256 |
-| `NUM_LAYERS` | 2 | 2 |
-| `PATIENCE` | 30 épocas | 30 épocas |
-| Otimizador | AdamW (wd=1e-5) | Adam |
-| Dropout recorrente | 0,3 | 0,3 |
-| Dropout regressor | 0,2 | 0,2 |
-| Clipping de gradiente | max_norm=1,0 | max_norm=1,0 |
-| `SEED` | 42 | 42 |
+| Hiperparâmetro        | LSTM            | GRU          |
+| --------------------- | --------------- | ------------ |
+| `BATCH_SIZE`          | 64              | 64           |
+| `EPOCHS` (máximo)     | 250             | 250          |
+| `LEARNING_RATE`       | 5 × 10⁻⁴        | 5 × 10⁻⁴     |
+| `HIDDEN_SIZE`         | 256             | 256          |
+| `NUM_LAYERS`          | 2               | 2            |
+| `PATIENCE`            | 30 épocas       | 30 épocas    |
+| Otimizador            | AdamW (wd=1e-5) | Adam         |
+| Dropout recorrente    | 0,3             | 0,3          |
+| Dropout regressor     | 0,2             | 0,2          |
+| Clipping de gradiente | max_norm=1,0    | max_norm=1,0 |
+| `SEED`                | 42              | 42           |
 
 ### 5.1 Função de Perda: Huber Loss
 
-$$\mathcal{L}_{\delta}(y, \hat{y}) = \begin{cases}
+$$
+\mathcal{L}_{\delta}(y, \hat{y}) = \begin{cases}
 \frac{1}{2}(y - \hat{y})^2 & \text{se } |y - \hat{y}| \leq \delta \\
 \delta \cdot \left(|y - \hat{y}| - \frac{\delta}{2}\right) & \text{caso contrário}
-\end{cases} \quad \delta = 3{,}0\ \text{BPM}$$
+\end{cases} \quad \delta = 3{,}0\ \text{BPM}
+$$
 
 A Huber Loss combina sensibilidade quadrática para erros pequenos (≤ 3 BPM) com robustez linear para outliers, evitando que ruídos de anotação dominem o gradiente. A validação e o early stopping utilizam o **MAE** (L1Loss), que é a métrica clinicamente mais interpretável.
 
@@ -311,24 +313,24 @@ Os resultados a seguir foram obtidos no conjunto de **validação** (13.655 amos
 
 ### 6.1 Métricas de Desempenho — GRU vs. LSTM
 
-| Métrica | GRU ★ | LSTM |
-|---|---|---|
-| **MAE (BPM)** | **1,22** | 1,84 |
-| **RMSE (BPM)** | **3,22** | — |
-| **R²** | **0,9642** | — |
-| **Pearson r** | **0,9821** | — |
-| Bias / μ (BPM) | 0,24 | — |
-| Desvio σ (BPM) | 3,21 | — |
-| LoA superior (BPM) | +6,54 | — |
-| LoA inferior (BPM) | −6,06 | — |
-| % ≤ 5 BPM | **97,3%** | — |
-| % ≤ 10 BPM | **98,5%** | — |
-| % ≤ 15 BPM | **99,0%** | — |
-| Parâmetros | 2.106.114 | 2.695.425 |
-| Tempo de inferência (val) | 31,4 s | — |
-| Épocas treinadas | 250 | 250 |
-| Melhor época | 249 | 243 |
-| Melhor val MAE | **1,2182 BPM** | **1,8423 BPM** |
+| Métrica                   | GRU ★          | LSTM           |
+| ------------------------- | -------------- | -------------- |
+| **MAE (BPM)**             | **1,22**       | 1,84           |
+| **RMSE (BPM)**            | **3,22**       | —              |
+| **R²**                    | **0,9642**     | —              |
+| **Pearson r**             | **0,9821**     | —              |
+| Bias / μ (BPM)            | 0,24           | —              |
+| Desvio σ (BPM)            | 3,21           | —              |
+| LoA superior (BPM)        | +6,54          | —              |
+| LoA inferior (BPM)        | −6,06          | —              |
+| % ≤ 5 BPM                 | **97,3%**      | —              |
+| % ≤ 10 BPM                | **98,5%**      | —              |
+| % ≤ 15 BPM                | **99,0%**      | —              |
+| Parâmetros                | 2.106.114      | 2.695.425      |
+| Tempo de inferência (val) | 31,4 s         | —              |
+| Épocas treinadas          | 250            | 250            |
+| Melhor época              | 249            | 243            |
+| Melhor val MAE            | **1,2182 BPM** | **1,8423 BPM** |
 
 > ★ GRU supera o LSTM em todas as métricas principais com 21,5% menos parâmetros.
 
@@ -349,16 +351,16 @@ Para o GRU: viés de +0,24 BPM (ligeira superestimação), limites de concordân
 
 ## 7. Métricas de Avaliação
 
-| Métrica | Fórmula | Interpretação |
-|---|---|---|
-| **MAE** | $\frac{1}{N}\sum|y_i - \hat{y}_i|$ | Erro médio absoluto em BPM |
-| **RMSE** | $\sqrt{\frac{1}{N}\sum(y_i - \hat{y}_i)^2}$ | Penaliza erros grandes |
-| **R²** | $1 - \frac{\text{SS}_\text{res}}{\text{SS}_\text{tot}}$ | Variância explicada pelo modelo |
-| **Pearson r** | $\text{corr}(y, \hat{y})$ | Correlação linear |
-| **Viés (μ)** | $\frac{1}{N}\sum(y_i - \hat{y}_i)$ | Tendência sistemática |
-| **Desvio (σ)** | $\text{std}(y_i - \hat{y}_i)$ | Dispersão dos resíduos |
-| **LoA ±1,96σ** | $\mu \pm 1{,}96\sigma$ | Limites de concordância Bland-Altman |
-| **% ≤ k BPM** | $P(|\text{erro}| \leq k)$ | Fração dentro de tolerância clínica |
+| Métrica        | Fórmula                                                 | Interpretação                        |
+| -------------- | ------------------------------------------------------- | ------------------------------------ | -------- | ----------------------------------- |
+| **MAE**        | $\frac{1}{N}\sum                                        | y_i - \hat{y}\_i                     | $        | Erro médio absoluto em BPM          |
+| **RMSE**       | $\sqrt{\frac{1}{N}\sum(y_i - \hat{y}_i)^2}$             | Penaliza erros grandes               |
+| **R²**         | $1 - \frac{\text{SS}_\text{res}}{\text{SS}_\text{tot}}$ | Variância explicada pelo modelo      |
+| **Pearson r**  | $\text{corr}(y, \hat{y})$                               | Correlação linear                    |
+| **Viés (μ)**   | $\frac{1}{N}\sum(y_i - \hat{y}_i)$                      | Tendência sistemática                |
+| **Desvio (σ)** | $\text{std}(y_i - \hat{y}_i)$                           | Dispersão dos resíduos               |
+| **LoA ±1,96σ** | $\mu \pm 1{,}96\sigma$                                  | Limites de concordância Bland-Altman |
+| **% ≤ k BPM**  | $P(                                                     | \text{erro}                          | \leq k)$ | Fração dentro de tolerância clínica |
 
 ---
 
@@ -375,32 +377,32 @@ python src/generate_charts.py --ckpt output/gru/best_model_gru.pt  # completo (2
 
 Gera até 24 figuras em `charts_output/`:
 
-| # | Gráfico |
-|---|---------|
-| 01 | Curva de aprendizado (Train Loss + Val MAE) |
-| 02 | Val MAE com suavização e zonas de convergência |
-| 03 | Training Loss com fases de treinamento |
-| 04 | Análise de convergência + gap de generalização |
-| 05 | FC média por posição — Ground Truth (dots) |
-| 06 | Melhor participante por posição (dots) |
-| 07 | FC média por posição — barras |
-| 08 | Contagem de amostras por posição |
-| 09 | Distribuição HR por posição — violin |
-| 10 | Distribuição HR por posição — box plot |
-| 11 | Amostras por participante |
-| 12 | FC por posição — Real vs. Predito (dots) |
-| 13 | Melhor coleta por posição — Real vs. Predito |
-| 14 | MAE por posição — barras |
-| 15 | MAE por posição — dots + banda de variabilidade |
-| 16 | MAE por participante — barras |
-| 17 | MAE por faixa de FC |
-| 18 | Scatter Real vs. Predito |
-| 19 | Bland-Altman |
-| 20 | Distribuição de resíduos |
-| 21 | CDF do erro absoluto |
-| 22 | Box plot de erros por posição |
-| 23 | Heatmap MAE: Participante × Posição |
-| 24 | Tabela de métricas |
+| #   | Gráfico                                         |
+| --- | ----------------------------------------------- |
+| 01  | Curva de aprendizado (Train Loss + Val MAE)     |
+| 02  | Val MAE com suavização e zonas de convergência  |
+| 03  | Training Loss com fases de treinamento          |
+| 04  | Análise de convergência + gap de generalização  |
+| 05  | FC média por posição — Ground Truth (dots)      |
+| 06  | Melhor participante por posição (dots)          |
+| 07  | FC média por posição — barras                   |
+| 08  | Contagem de amostras por posição                |
+| 09  | Distribuição HR por posição — violin            |
+| 10  | Distribuição HR por posição — box plot          |
+| 11  | Amostras por participante                       |
+| 12  | FC por posição — Real vs. Predito (dots)        |
+| 13  | Melhor coleta por posição — Real vs. Predito    |
+| 14  | MAE por posição — barras                        |
+| 15  | MAE por posição — dots + banda de variabilidade |
+| 16  | MAE por participante — barras                   |
+| 17  | MAE por faixa de FC                             |
+| 18  | Scatter Real vs. Predito                        |
+| 19  | Bland-Altman                                    |
+| 20  | Distribuição de resíduos                        |
+| 21  | CDF do erro absoluto                            |
+| 22  | Box plot de erros por posição                   |
+| 23  | Heatmap MAE: Participante × Posição             |
+| 24  | Tabela de métricas                              |
 
 ### 8.2 Comparação GRU vs. LSTM
 
@@ -414,22 +416,22 @@ python src/compare_models.py --out results/figures
 
 Gera 20 figuras:
 
-| # | Gráfico |
-|---|---------|
-| comp_01 | Curvas de aprendizado — lado a lado |
-| comp_01b | Curvas de aprendizado — sobrepostas |
-| comp_02 | Real vs. Predito — lado a lado |
-| comp_03 | Bland-Altman — lado a lado |
-| comp_04 | CDF sobrepostas GRU × LSTM |
-| comp_05 | Barras: MAE, RMSE, R², Parâmetros, Tempo |
-| comp_06 | MAE por participante — barras agrupadas |
-| comp_07 | MAE por posição — barras agrupadas |
-| comp_08 | FC por posição — GT + GRU + LSTM (dots) |
-| comp_09 | Tabela comparativa GRU vs. LSTM (★ = melhor) |
-| gru_01–07 | GRU: curva, posição, scatter, Bland-Altman, CDF, barras, tabela |
-| signal_01 | Sinal temporal: melhor / típico / pior caso |
+| #         | Gráfico                                                               |
+| --------- | --------------------------------------------------------------------- |
+| comp_01   | Curvas de aprendizado — lado a lado                                   |
+| comp_01b  | Curvas de aprendizado — sobrepostas                                   |
+| comp_02   | Real vs. Predito — lado a lado                                        |
+| comp_03   | Bland-Altman — lado a lado                                            |
+| comp_04   | CDF sobrepostas GRU × LSTM                                            |
+| comp_05   | Barras: MAE, RMSE, R², Parâmetros, Tempo                              |
+| comp_06   | MAE por participante — barras agrupadas                               |
+| comp_07   | MAE por posição — barras agrupadas                                    |
+| comp_08   | FC por posição — GT + GRU + LSTM (dots)                               |
+| comp_09   | Tabela comparativa GRU vs. LSTM (★ = melhor)                          |
+| gru_01–07 | GRU: curva, posição, scatter, Bland-Altman, CDF, barras, tabela       |
+| signal_01 | Sinal temporal: melhor / típico / pior caso                           |
 | signal_02 | Sinal temporal de 1 participante × posição (GT vs GRU vs LSTM + erro) |
-| signal_03 | Grid de 6 participantes na mesma posição |
+| signal_03 | Grid de 6 participantes na mesma posição                              |
 
 ---
 
@@ -518,24 +520,24 @@ python src/compare_models.py --subject 5 --position 3
 
 ### 10.3 Resumo dos Resultados por Modelo
 
-| Script | Modelo | Parâmetros | Melhor val MAE | Época |
-|---|---|---|---|---|
-| `train_gru.py` | GRU Bi + proj. + atenção | 2.106.114 | **1,22 BPM** | 249 |
-| `train_lstm.py` | LSTM Bi (baseline) | 2.695.425 | 1,84 BPM | 243 |
+| Script          | Modelo                   | Parâmetros | Melhor val MAE | Época |
+| --------------- | ------------------------ | ---------- | -------------- | ----- |
+| `train_gru.py`  | GRU Bi + proj. + atenção | 2.106.114  | **1,22 BPM**   | 249   |
+| `train_lstm.py` | LSTM Bi (baseline)       | 2.695.425  | 1,84 BPM       | 243   |
 
 ---
 
 ## 11. Referências Técnicas
 
-- **Butterworth / filtfilt:** Oppenheim & Schafer, *Discrete-Time Signal Processing*, 3ª ed. — Prentice Hall.
-- **Savitzky-Golay:** Savitzky, A.; Golay, M.J.E. (1964). *Smoothing and Differentiation of Data by Simplified Least Squares Procedures*. Analytical Chemistry.
-- **CSI para sinais vitais:** Wang, F. et al. (2017). *E-eyes: Device-free location-oriented activity identification using fine-grained WiFi signatures*. IEEE INFOCOM.
-- **Bi-LSTM:** Schuster, M.; Paliwal, K. (1997). *Bidirectional recurrent neural networks*. IEEE Transactions on Signal Processing.
-- **GRU:** Cho, K. et al. (2014). *Learning phrase representations using RNN encoder-decoder for statistical machine translation*. EMNLP.
-- **Huber Loss:** Huber, P.J. (1964). *Robust Estimation of a Location Parameter*. Annals of Mathematical Statistics.
-- **Bland-Altman:** Bland, J.M.; Altman, D.G. (1986). *Statistical methods for assessing agreement between two methods of clinical measurement*. The Lancet.
-- **Adam / AdamW:** Kingma, D.P.; Ba, J. (2014). *Adam: A method for stochastic optimization*. ICLR 2015. / Loshchilov, I.; Hutter, F. (2019). *Decoupled Weight Decay Regularization*. ICLR 2019.
+- **Butterworth / filtfilt:** Oppenheim & Schafer, _Discrete-Time Signal Processing_, 3ª ed. — Prentice Hall.
+- **Savitzky-Golay:** Savitzky, A.; Golay, M.J.E. (1964). _Smoothing and Differentiation of Data by Simplified Least Squares Procedures_. Analytical Chemistry.
+- **CSI para sinais vitais:** Wang, F. et al. (2017). _E-eyes: Device-free location-oriented activity identification using fine-grained WiFi signatures_. IEEE INFOCOM.
+- **Bi-LSTM:** Schuster, M.; Paliwal, K. (1997). _Bidirectional recurrent neural networks_. IEEE Transactions on Signal Processing.
+- **GRU:** Cho, K. et al. (2014). _Learning phrase representations using RNN encoder-decoder for statistical machine translation_. EMNLP.
+- **Huber Loss:** Huber, P.J. (1964). _Robust Estimation of a Location Parameter_. Annals of Mathematical Statistics.
+- **Bland-Altman:** Bland, J.M.; Altman, D.G. (1986). _Statistical methods for assessing agreement between two methods of clinical measurement_. The Lancet.
+- **Adam / AdamW:** Kingma, D.P.; Ba, J. (2014). _Adam: A method for stochastic optimization_. ICLR 2015. / Loshchilov, I.; Hutter, F. (2019). _Decoupled Weight Decay Regularization_. ICLR 2019.
 
 ---
 
-*Relatório atualizado em 2026-06-10 com resultados definitivos dos modelos treinados.*
+_Relatório atualizado em 2026-06-10 com resultados definitivos dos modelos treinados._

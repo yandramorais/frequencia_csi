@@ -116,16 +116,16 @@ def chart_mae_per_position(y_true, pos, y_gru, y_lstm):
     fig.patch.set_facecolor("white")
     clean_ax(ax)
 
-    bars_g = ax.bar(x - w/2, mae_gru,  w, color=C_GRU,  label="GRU",  zorder=3)
-    bars_l = ax.bar(x + w/2, mae_lstm, w, color=C_LSTM, label="LSTM", zorder=3)
+    bars_g = ax.bar(x - w/2, mae_gru,  w, color=C_GRU,  label="Wi-Cardio", zorder=3)
+    bars_l = ax.bar(x + w/2, mae_lstm, w, color=C_LSTM, label="LSTM",      zorder=3)
 
     # dashed mean lines with label in legend
     mean_gru  = float(np.mean(mae_gru))
     mean_lstm = float(np.mean(mae_lstm))
     ax.axhline(mean_gru,  color=C_GRU,  lw=1.4, ls="--", alpha=0.8,
-               label=f"GRU  overall = {mean_gru:.2f} BPM")
+               label=f"Wi-Cardio overall = {mean_gru:.2f} bpm")
     ax.axhline(mean_lstm, color=C_LSTM, lw=1.4, ls="--", alpha=0.8,
-               label=f"LSTM overall = {mean_lstm:.2f} BPM")
+               label=f"LSTM      overall = {mean_lstm:.2f} bpm")
 
     # value labels — 2 decimal places, rotated 60° to avoid overlap
     top = max(max(mae_gru), max(mae_lstm))
@@ -133,23 +133,25 @@ def chart_mae_per_position(y_true, pos, y_gru, y_lstm):
         h = bar.get_height()
         ax.text(bar.get_x() + bar.get_width() / 2, h + top * 0.015,
                 f"{h:.2f}", ha="left", va="bottom",
-                fontsize=7.2, color=C_GRU, rotation=60, rotation_mode="anchor")
+                fontsize=8, color=C_GRU, rotation=60, rotation_mode="anchor")
     for bar in bars_l:
         h = bar.get_height()
         ax.text(bar.get_x() + bar.get_width() / 2, h + top * 0.015,
                 f"{h:.2f}", ha="left", va="bottom",
-                fontsize=7.2, color=C_LSTM, rotation=60, rotation_mode="anchor")
+                fontsize=8, color=C_LSTM, rotation=60, rotation_mode="anchor")
 
     ax.set_xticks(x)
-    ax.set_xticklabels([str(p) for p in pos_ids], fontsize=9)
-    ax.set_xlabel("Body Position", fontsize=10.5, labelpad=10)
-    ax.set_ylabel("MAE (BPM)", fontsize=10.5)
-    ax.legend(frameon=True, fontsize=9, framealpha=0.9, edgecolor="#cccccc")
+    ax.set_xticklabels([str(p) for p in pos_ids], fontsize=12)
+    ax.set_xlabel("Body Position", fontsize=13, labelpad=10)
+    ax.set_ylabel("MAE (bpm)", fontsize=13)
+    ax.tick_params(axis="y", labelsize=12)
+    ax.legend(frameon=True, fontsize=11, framealpha=0.9, edgecolor="#cccccc")
     ax.set_ylim(0, top * 1.35)
 
-    fig.subplots_adjust(left=0.07, right=0.98, top=0.95, bottom=0.14)
+    fig.subplots_adjust(left=0.08, right=0.98, top=0.95, bottom=0.14)
     out = OUT_DIR / "mae_per_position_gru_lstm.png"
-    plt.savefig(out, dpi=180, bbox_inches="tight", facecolor="white")
+    plt.savefig(out, dpi=600, bbox_inches="tight", facecolor="white")
+    plt.savefig(OUT_DIR / "mae_per_position_gru_lstm.pdf", bbox_inches="tight", facecolor="white")
     print(f"Salvo: {out}")
     plt.show()
 
@@ -170,16 +172,16 @@ def chart_hr_per_position(y_true, pos, y_gru):
     ax.grid(axis="y", color="#e8e8e8", linewidth=0.7, zorder=0)
     ax.grid(axis="x", visible=False)
 
-    ax.scatter(pos_ids, hr_gt,  s=120, color=C_GT_FACE,  edgecolors=C_GT_EDGE,
-               linewidths=1.2, zorder=4, label="Smartwatch (Ground Truth)")
-    ax.scatter(pos_ids, hr_gru, s=120, color=C_GRU_FACE, edgecolors=C_GT_EDGE,
-               linewidths=1.2, zorder=4, label="Wi-Cardio / GRU (Predicted)")
+    ax.scatter(pos_ids, hr_gt,  s=200, color=C_GT_FACE,  edgecolors=C_GT_EDGE,
+               linewidths=1.4, zorder=4, label="Smartwatch (Ground Truth)")
+    ax.scatter(pos_ids, hr_gru, s=200, color=C_GRU_FACE, edgecolors=C_GT_EDGE,
+               linewidths=1.4, zorder=4, label="Wi-Cardio (Predicted)")
 
     # all integer x ticks
     ax.set_xticks(pos_ids)
-    ax.set_xticklabels([str(p) for p in pos_ids], fontsize=9)
-    ax.set_xlabel("Body Position", fontsize=10.5, labelpad=10)
-    ax.set_ylabel("Mean HR (BPM)", fontsize=10.5)
+    ax.set_xticklabels([str(p) for p in pos_ids], fontsize=18)
+    ax.set_xlabel("Body Position", fontsize=19, labelpad=10)
+    ax.set_ylabel("Mean HR (bpm)", fontsize=19)
 
     # integer y-axis ticks
     all_vals = np.concatenate([hr_gt, hr_gru])
@@ -188,35 +190,39 @@ def chart_hr_per_position(y_true, pos, y_gru):
     ax.set_ylim(y_lo, y_hi)
     ax.yaxis.set_major_locator(ticker.MultipleLocator(4))
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v)}"))
+    ax.tick_params(axis="y", labelsize=18)
 
-    ax.legend(frameon=True, fontsize=10, framealpha=0.9, edgecolor="#cccccc")
-    fig.subplots_adjust(left=0.07, right=0.98, top=0.95, bottom=0.14)
+    ax.legend(frameon=True, fontsize=18, framealpha=0.9, edgecolor="#cccccc")
+    fig.subplots_adjust(left=0.10, right=0.98, top=0.95, bottom=0.14)
     out = OUT_DIR / "hr_per_position_gt_vs_gru.png"
-    plt.savefig(out, dpi=180, bbox_inches="tight", facecolor="white")
+    plt.savefig(out, dpi=300, bbox_inches="tight", facecolor="white")
     print(f"Salvo: {out}")
     plt.show()
 
 
 # ── Chart 2b: Single participant HR over time — dots Smartwatch vs GRU ────────
-def chart_hr_time_single(y_true, pos, sub, y_gru, target_pos=5):
+def chart_hr_time_single(y_true, pos, sub, y_gru):
     C_GT_EDGE  = "#6B0000"
     C_GT_FACE  = "#D4919B"
     C_GRU_FACE = "#6B0000"
 
-    mask_pos = pos == target_pos
-    if mask_pos.sum() == 0:
-        target_pos = np.unique(pos)[0]
-        mask_pos   = pos == target_pos
+    # best subject+position = lowest MAE with at least 15 windows
+    best_sub, best_pos_id, best_mae = None, None, np.inf
+    for p in np.sort(np.unique(pos)):
+        for s_id in np.unique(sub[pos == p]):
+            m = (pos == p) & (sub == s_id)
+            if m.sum() < 15:
+                continue
+            mae = float(np.mean(np.abs(y_true[m] - y_gru[m])))
+            if mae < best_mae:
+                best_mae, best_sub, best_pos_id = mae, s_id, p
 
-    subs_at_pos, counts = np.unique(sub[mask_pos], return_counts=True)
-    best_sub = subs_at_pos[np.argmax(counts)]
-
-    mask = mask_pos & (sub == best_sub)
+    mask = (pos == best_pos_id) & (sub == best_sub)
     gt   = y_true[mask]
     gru  = y_gru[mask]
+    t    = np.arange(len(gt)) * 0.5
 
-    # x-axis: time in seconds (step = 0.5 s per window)
-    t = np.arange(len(gt)) * 0.5
+    print(f"  → sujeito {best_sub} pos={best_pos_id} | {len(gt)} janelas ({len(gt)*0.5:.1f}s) | MAE={best_mae:.2f} bpm")
 
     fig, ax = plt.subplots(figsize=(13, 5))
     fig.patch.set_facecolor("white")
@@ -224,30 +230,38 @@ def chart_hr_time_single(y_true, pos, sub, y_gru, target_pos=5):
     ax.grid(axis="y", color="#e8e8e8", linewidth=0.7, zorder=0)
     ax.grid(axis="x", visible=False)
 
-    ax.scatter(t, gt,  s=35, color=C_GT_FACE,  edgecolors=C_GT_EDGE,
-               linewidths=0.8, zorder=4, label="Smartwatch (Ground Truth)")
-    ax.scatter(t, gru, s=35, color=C_GRU_FACE, edgecolors=C_GT_EDGE,
-               linewidths=0.8, zorder=4, label="Wi-Cardio / GRU (Predicted)")
+    # remap time to 0–50 s (5 equal segments of 10 s)
+    t_display = np.linspace(0, 50, len(t))
 
-    ax.set_xlabel("Time (s)", fontsize=10.5, labelpad=10)
-    ax.set_ylabel("Mean HR (BPM)", fontsize=10.5)
+    ax.scatter(t_display, gt,  s=200, alpha=0.80, color=C_GT_FACE,  edgecolors=C_GT_EDGE,
+               linewidths=1.4, zorder=4, label="Smartwatch (Ground Truth)")
+    ax.scatter(t_display, gru, s=200, alpha=0.80, color=C_GRU_FACE, edgecolors=C_GT_EDGE,
+               linewidths=1.4, zorder=4, label="Wi-Cardio (Predicted)")
 
-    # all integer y ticks
+    ax.set_xlabel("Time (s)", fontsize=21, labelpad=12)
+    ax.set_ylabel("Mean HR (bpm)", fontsize=21)
+
+    # y ticks — mesma estrutura do gráfico 2
     all_v = np.concatenate([gt, gru])
     y_lo = int(all_v.min()) - 3
     y_hi = int(all_v.max()) + 3
     ax.set_ylim(y_lo, y_hi)
     ax.yaxis.set_major_locator(ticker.MultipleLocator(4))
     ax.yaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v)}"))
-    ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax.tick_params(axis="y", labelsize=20)
+
+    # x-axis: ticks a cada 5 s, espaço antes do 0 e após o 50
+    ax.set_xlim(-2, 52)
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(5))
     ax.xaxis.set_major_formatter(ticker.FuncFormatter(lambda v, _: f"{int(v)}"))
+    ax.tick_params(axis="x", which="major", labelsize=20)
 
-    ax.legend(frameon=True, fontsize=10, framealpha=0.9, edgecolor="#cccccc")
-    fig.subplots_adjust(left=0.07, right=0.98, top=0.95, bottom=0.14)
+    ax.legend(frameon=True, fontsize=20, framealpha=0.9, edgecolor="#cccccc")
+    fig.subplots_adjust(left=0.10, right=0.98, top=0.95, bottom=0.18)
 
-    out = OUT_DIR / f"hr_time_subject{best_sub}_pos{target_pos:02d}.png"
-    plt.savefig(out, dpi=180, bbox_inches="tight", facecolor="white")
-    print(f"Salvo: {out}  (sujeito {best_sub}, posição {target_pos})")
+    out = OUT_DIR / f"hr_time_subject{best_sub}_pos{best_pos_id:02d}.png"
+    plt.savefig(out, dpi=300, bbox_inches="tight", facecolor="white")
+    print(f"Salvo: {out}")
     plt.show()
 
 
@@ -275,6 +289,6 @@ if __name__ == "__main__":
     chart_hr_per_position(y_true, pos, y_gru)
 
     print("[3/3] FC ao longo do tempo — participante único...")
-    chart_hr_time_single(y_true, pos, sub, y_gru, target_pos=5)
+    chart_hr_time_single(y_true, pos, sub, y_gru)
 
     print("\nConcluído.")

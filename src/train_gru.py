@@ -1,9 +1,3 @@
-"""
-train_gru.py — Bidirectional GRU with input projection and attention for HR estimation.
-
-Usage:
-    python src/train_gru.py
-"""
 import json
 import random
 import time
@@ -16,7 +10,6 @@ import torch.optim as optim
 from sklearn.metrics import mean_absolute_error, r2_score
 from torch.utils.data import DataLoader, TensorDataset
 
-# ── Device ────────────────────────────────────────────────────────────────────
 
 def get_device() -> torch.device:
     if torch.backends.mps.is_available():
@@ -25,7 +18,7 @@ def get_device() -> torch.device:
         return torch.device("cuda")
     return torch.device("cpu")
 
-# ── Config ────────────────────────────────────────────────────────────────────
+
 DEVICE     = get_device()
 INPUT_DIR  = Path("saida_full")
 OUTPUT_DIR = Path("output/gru")
@@ -47,8 +40,6 @@ LR_MIN        = 1e-5
 GRAD_CLIP     = 1.0
 
 
-# ── Reproducibility ───────────────────────────────────────────────────────────
-
 def set_seed(seed: int = SEED) -> None:
     random.seed(seed)
     np.random.seed(seed)
@@ -58,8 +49,6 @@ def set_seed(seed: int = SEED) -> None:
         torch.backends.cudnn.deterministic = True
         torch.backends.cudnn.benchmark     = False
 
-
-# ── Data ──────────────────────────────────────────────────────────────────────
 
 def load_data() -> tuple[DataLoader, DataLoader, np.ndarray]:
     X_train = np.load(INPUT_DIR / "X_train.npz")["X"].astype(np.float32)
@@ -78,11 +67,7 @@ def load_data() -> tuple[DataLoader, DataLoader, np.ndarray]:
     return train_loader, val_loader, y_val
 
 
-# ── Model ─────────────────────────────────────────────────────────────────────
-
 class PulseFiGRU(nn.Module):
-    """Bidirectional GRU with input projection, LayerNorm and temporal attention."""
-
     def __init__(self, input_dim: int, hidden: int = HIDDEN, layers: int = LAYERS) -> None:
         super().__init__()
         self.input_proj = nn.Sequential(
@@ -113,8 +98,6 @@ class PulseFiGRU(nn.Module):
         ctx = (out * w).sum(dim=1)
         return self.regressor(ctx).squeeze(-1)
 
-
-# ── Training loop ─────────────────────────────────────────────────────────────
 
 def train() -> None:
     set_seed()
